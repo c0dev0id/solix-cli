@@ -27,8 +27,10 @@ SOLIX_COUNTRY=DE
 ## Install
 
 ```sh
-make install   # installs solix-cli to $HOME/python/bin/
+make install   # installs solix-cli to $HOME/python/bin/ and man page to $HOME/python/share/man/man1/
 ```
+
+After install, add `$HOME/python/share/man` to your `MANPATH` to use `man solix-cli`.
 
 ## Usage
 
@@ -62,6 +64,6 @@ solix-cli set-export --on --limit 500 # enable with 500W cap
 | Target | Description |
 |---|---|
 | `make venv` | Create `.venv` and install all dependencies |
-| `make install` | Install `solix-cli` binary to `$HOME/python/bin/` |
+| `make install` | Install `solix-cli` binary and man page to `$HOME/python/` |
 | `make update` | Pull latest upstream library changes |
 | `make clean` | Remove `.venv` |
