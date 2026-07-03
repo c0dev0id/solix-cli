@@ -1,12 +1,14 @@
 import asyncio
 import json
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 
 import click
 from aiohttp import ClientSession
 from anker_solix_api.api import AnkerSolixApi
-from anker_solix_api.apitypes import SolarbankUsageMode
+from anker_solix_api.apitypes import SolarbankUsageMode, SolixDeviceType
 from anker_solix_api.errors import AnkerSolixError
+from anker_solix_api.helpers import get_enum_name
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,18 +25,23 @@ def cli(ctx, email, password, country):
     ctx.obj.update(email=email, password=password, country=country)
 
 
-async def _connect(creds):
-    session = ClientSession()
-    api = AnkerSolixApi(creds["email"], creds["password"], creds["country"], session)
-    await api.async_authenticate()
-    await api.update_sites()
-    await api.update_device_details()
-    return api, session
+@asynccontextmanager
+async def _connect(creds, details=False):
+    async with ClientSession() as session:
+        api = AnkerSolixApi(creds["email"], creds["password"], creds["country"], session)
+        try:
+            await api.async_authenticate()
+            await api.update_sites()
+            if details:
+                await api.update_device_details()
+        except AnkerSolixError as e:
+            raise click.ClickException(str(e))
+        yield api
 
 
 def _autoselect(api):
     for sn, dev in api.devices.items():
-        if dev.get("type") == "solarbank":
+        if dev.get("type") == SolixDeviceType.SOLARBANK.value:
             return dev["site_id"], sn
     raise click.ClickException("No solarbank device found")
 
@@ -42,8 +49,6 @@ def _autoselect(api):
 def _kwh(val):
     return f"{float(val):.2f} kWh" if val else "-"
 
-
-# ── status ────────────────────────────────────────────────────────────────────
 
 @cli.command()
 @click.option("--json", "as_json", is_flag=True, help="Raw JSON output")
@@ -54,11 +59,7 @@ def status(ctx, as_json):
 
 
 async def _status(creds, as_json):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds) as api:
         if as_json:
             click.echo(json.dumps(api.sites, indent=2))
             return
@@ -85,8 +86,6 @@ def _print_site(site):
     click.echo()
 
 
-# ── devices ───────────────────────────────────────────────────────────────────
-
 @cli.command()
 @click.option("--json", "as_json", is_flag=True, help="Raw JSON output")
 @click.pass_context
@@ -96,11 +95,7 @@ def devices(ctx, as_json):
 
 
 async def _devices(creds, as_json):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds) as api:
         if as_json:
             click.echo(json.dumps(api.devices, indent=2))
             return
@@ -124,8 +119,6 @@ def _print_devices(devs):
         click.echo(FMT.format(sn[:22], name[:28], dtype[:12], st[:9], bat_s, pv_s, out_s))
 
 
-# ── energy ────────────────────────────────────────────────────────────────────
-
 @cli.command()
 @click.option("--days", default=7, show_default=True, help="Number of past days")
 @click.option("--json", "as_json", is_flag=True, help="Raw JSON output")
@@ -136,11 +129,7 @@ def energy(ctx, days, as_json):
 
 
 async def _energy(creds, days, as_json):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds) as api:
         site_id, sn = _autoselect(api)
         start = datetime.today() - timedelta(days=days - 1)
         data = await api.energy_daily(
@@ -149,7 +138,7 @@ async def _energy(creds, days, as_json):
             startDay=start,
             numDays=days,
             dayTotals=True,
-            devTypes={"solarbank", "smartmeter"},
+            devTypes={SolixDeviceType.SOLARBANK.value, SolixDeviceType.SMARTMETER.value},
         )
         if as_json:
             click.echo(json.dumps(data, indent=2))
@@ -172,8 +161,6 @@ def _print_energy(data):
         ))
 
 
-# ── config ────────────────────────────────────────────────────────────────────
-
 @cli.command()
 @click.option("--json", "as_json", is_flag=True, help="Raw JSON output")
 @click.pass_context
@@ -183,11 +170,7 @@ def config(ctx, as_json):
 
 
 async def _config(creds, as_json):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds, details=True) as api:
         site_id, sn = _autoselect(api)
         dev = api.devices[sn]
         site = api.sites[site_id]
@@ -203,29 +186,21 @@ async def _config(creds, as_json):
 
 def _print_config(dev, site):
     sched = dev.get("schedule", {})
-    mode_val = sched.get("mode_type", 0)
-    try:
-        mode_name = SolarbankUsageMode(mode_val).name
-    except ValueError:
-        mode_name = str(mode_val)
+    mode_name = get_enum_name(SolarbankUsageMode, sched.get("mode_type", 0), default="unknown")
     ai = sched.get("ai_ems") or {}
     click.echo(f"Mode:             {mode_name}")
     click.echo(f"AI EMS:           {'on' if ai.get('enable') else 'off'}")
     click.echo(f"Home load:        {sched.get('default_home_load', '?')}W")
     click.echo(f"Backup reserve:   {sched.get('reserved_soc', '?')}%")
-
     cutoffs = dev.get("power_cutoff_data") or []
     selected = next((c for c in cutoffs if c.get("is_selected")), None)
     if selected:
         click.echo(f"Discharge cutoff: {selected.get('output_cutoff_data', '?')}%")
         click.echo(f"Charge cutoff:    {selected.get('input_cutoff_data', '?')}%")
-
     grid_export = (site.get("site_details") or {}).get("grid_export")
     if grid_export is not None:
         click.echo(f"Grid export:      {'on' if grid_export else 'off'}")
 
-
-# ── set-output ────────────────────────────────────────────────────────────────
 
 @cli.command("set-output")
 @click.argument("watts", type=int)
@@ -236,11 +211,7 @@ def set_output(ctx, watts):
 
 
 async def _set_output(creds, watts):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds) as api:
         site_id, sn = _autoselect(api)
         result = await api.set_sb2_home_load(siteId=site_id, deviceSn=sn, preset=float(watts))
         if result:
@@ -248,8 +219,6 @@ async def _set_output(creds, watts):
         else:
             raise click.ClickException("Command failed")
 
-
-# ── set-soc ───────────────────────────────────────────────────────────────────
 
 @cli.command("set-soc")
 @click.option("--min", "soc_min", type=int, default=None, help="Discharge cutoff %")
@@ -263,11 +232,7 @@ def set_soc(ctx, soc_min, soc_max):
 
 
 async def _set_soc(creds, soc_min, soc_max):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds) as api:
         _, sn = _autoselect(api)
         result = await api.set_power_cutoff(deviceSn=sn, socMin=soc_min, socMax=soc_max)
         if result:
@@ -281,8 +246,6 @@ async def _set_soc(creds, soc_min, soc_max):
             raise click.ClickException("Command failed")
 
 
-# ── set-export ────────────────────────────────────────────────────────────────
-
 @cli.command("set-export")
 @click.option("--on/--off", "enabled", default=None, help="Enable or disable grid export")
 @click.option("--limit", type=int, default=None, help="Export cap in watts")
@@ -295,11 +258,7 @@ def set_export(ctx, enabled, limit):
 
 
 async def _set_export(creds, enabled, limit):
-    try:
-        api, session = await _connect(creds)
-    except AnkerSolixError as e:
-        raise click.ClickException(str(e))
-    async with session:
+    async with _connect(creds) as api:
         site_id, sn = _autoselect(api)
         result = await api.set_station_parm(
             siteId=site_id, deviceSn=sn,
