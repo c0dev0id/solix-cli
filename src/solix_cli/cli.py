@@ -1,4 +1,5 @@
 import asyncio
+import importlib.metadata
 import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -18,10 +19,16 @@ load_dotenv()
 @click.option("--email", envvar=["SOLIX_EMAIL", "ANKERUSER"], help="Anker account email")
 @click.option("--password", envvar=["SOLIX_PASSWORD", "ANKERPASSWORD"], help="Anker account password")
 @click.option("--country", envvar=["SOLIX_COUNTRY", "ANKERCOUNTRY"], default="DE", show_default=True, help="Country code")
+@click.version_option(importlib.metadata.version("solix-cli"), prog_name="solix-cli")
 @click.pass_context
 def cli(ctx, email, password, country):
     """solix-cli — Anker Solix command-line interface."""
     ctx.ensure_object(dict)
+    if ctx.invoked_subcommand and ctx.invoked_subcommand != "version":
+        if not email or not password:
+            raise click.UsageError(
+                "Credentials required. Set SOLIX_EMAIL and SOLIX_PASSWORD (or use --email/--password)."
+            )
     ctx.obj.update(email=email, password=password, country=country)
 
 
@@ -47,7 +54,10 @@ def _autoselect(api):
 
 
 def _kwh(val):
-    return f"{float(val):.2f} kWh" if val else "-"
+    try:
+        return f"{float(val):.2f} kWh" if val else "-"
+    except (ValueError, TypeError):
+        return "-"
 
 
 @cli.command()
