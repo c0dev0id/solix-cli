@@ -2,7 +2,9 @@ VENV    := .venv
 PYTHON  := $(VENV)/bin/python3
 PIP     := $(VENV)/bin/pip
 
-.PHONY: all venv update clean
+INSTALL_DIR := $(HOME)/python
+
+.PHONY: all venv install update clean
 
 all: venv
 
@@ -14,6 +16,9 @@ $(VENV)/bin/python3:
 	$(PIP) install -e .
 
 venv: $(VENV)/bin/python3
+
+install: $(VENV)/bin/python3
+	python3 -m pip install --prefix=$(INSTALL_DIR) vendor/anker-solix-api .
 
 update:
 	git submodule update --remote vendor/anker-solix-api
