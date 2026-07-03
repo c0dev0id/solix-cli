@@ -10,9 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```sh
 make venv          # create .venv and install all deps
-make install       # install solix-cli binary to $HOME/python/bin/
+make install       # install solix-cli binary and man page to $HOME/python/solix-cli/
 make update        # pull latest upstream library changes
-make clean         # remove .venv
+make clean         # remove .venv, build/, src/*.egg-info
 ```
 
 Activate with `.venv/bin/solix-cli` or `. .venv/bin/activate`.
