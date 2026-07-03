@@ -41,6 +41,6 @@ All code lives in `src/solix_cli/cli.py`. Entry point: `solix_cli.__main__:main`
 
 All commands support `--json` for raw API output. `--version` reads from package metadata.
 
-## Platform
+## Notes
 
-OpenBSD. Use `doas pkg_add -a` for missing system packages. Always use the virtualenv — never `pip install` globally.
+Always use the virtualenv — never `pip install` globally.
