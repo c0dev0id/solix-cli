@@ -7,9 +7,9 @@ Wraps [thomluther/anker-solix-api](https://github.com/thomluther/anker-solix-api
 ## Setup
 
 ```sh
-git clone --recurse-submodules <repo>
+git clone --recurse-submodules <repo-url>
 cd anker-solix
-make
+make venv
 ```
 
 Copy `.env.example` to `.env` and fill in your credentials:
@@ -24,13 +24,13 @@ SOLIX_PASSWORD=yourpassword
 SOLIX_COUNTRY=DE
 ```
 
-## Install
+Then install the binary and man page:
 
 ```sh
-make install   # installs solix-cli to $HOME/python/solix-cli/bin/ and man page to $HOME/python/solix-cli/share/man/man1/
+make install
 ```
 
-After install, add `$HOME/python/solix-cli/share/man` to your `MANPATH` to use `man solix-cli`.
+This puts `solix-cli` in `$HOME/python/solix-cli/bin/` and the man page in `$HOME/python/solix-cli/share/man/man1/`. Add both to your `PATH` and `MANPATH` respectively.
 
 ## Usage
 
@@ -66,4 +66,4 @@ solix-cli set-export --on --limit 500 # enable with 500W cap
 | `make venv` | Create `.venv` and install all dependencies |
 | `make install` | Install `solix-cli` binary and man page to `$HOME/python/solix-cli/` |
 | `make update` | Pull latest upstream library changes |
-| `make clean` | Remove `.venv` |
+| `make clean` | Remove `.venv`, `build/`, and egg-info directories |
