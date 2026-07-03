@@ -25,4 +25,4 @@ update:
 	$(PIP) install -e vendor/anker-solix-api
 
 clean:
-	rm -rf $(VENV)
+	rm -rf $(VENV) build/ src/*.egg-info
