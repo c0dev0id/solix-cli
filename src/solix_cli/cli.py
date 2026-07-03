@@ -45,10 +45,13 @@ async def _connect(creds, details=False):
 
 
 def _autoselect(api):
-    for sn, dev in api.devices.items():
-        if dev.get("type") == SolixDeviceType.SOLARBANK.value:
-            return dev["site_id"], sn
-    raise click.ClickException("No solarbank device found")
+    found = [(sn, dev) for sn, dev in api.devices.items() if dev.get("type") == SolixDeviceType.SOLARBANK.value]
+    if not found:
+        raise click.ClickException("No solarbank device found")
+    if len(found) > 1:
+        click.echo(f"Warning: {len(found)} solarbank devices found, using {found[0][0]}", err=True)
+    sn, dev = found[0]
+    return dev["site_id"], sn
 
 
 def _kwh(val):
@@ -225,7 +228,7 @@ async def _set_output(creds, watts):
         if result:
             click.echo(f"Home load set to {watts}W")
         else:
-            raise click.ClickException("Command failed")
+            raise click.ClickException("Failed to set home load — device may not support this or site admin rights are required")
 
 
 @cli.command("set-soc")
@@ -251,7 +254,7 @@ async def _set_soc(creds, soc_min, soc_max):
                 parts.append(f"charge cutoff {soc_max}%")
             click.echo(f"SOC limits set: {', '.join(parts)}")
         else:
-            raise click.ClickException("Command failed")
+            raise click.ClickException("Failed to set SOC limits — check device firmware supports this feature")
 
 
 @cli.command("set-export")
