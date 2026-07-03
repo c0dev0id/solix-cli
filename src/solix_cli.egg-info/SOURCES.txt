@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/solix_cli/__init__.py
+src/solix_cli/__main__.py
+src/solix_cli/cli.py
+src/solix_cli.egg-info/PKG-INFO
+src/solix_cli.egg-info/SOURCES.txt
+src/solix_cli.egg-info/dependency_links.txt
+src/solix_cli.egg-info/entry_points.txt
+src/solix_cli.egg-info/requires.txt
+src/solix_cli.egg-info/top_level.txt

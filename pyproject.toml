@@ -1,0 +1,17 @@
+[project]
+name = "solix-cli"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+solix-cli = "solix_cli.__main__:main"
+
+[build-system]
+requires = ["setuptools>=72"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
