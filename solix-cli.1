@@ -1,0 +1,84 @@
+.Dd $Mdocdate: July 3 2026 $
+.Dt SOLIX-CLI 1
+.Os
+.Sh NAME
+.Nm solix-cli
+.Nd Anker Solix command-line interface
+.Sh SYNOPSIS
+.Nm
+.Op Fl \-email Ar email
+.Op Fl \-password Ar password
+.Op Fl \-country Ar code
+.Ar command
+.Op Ar options
+.Sh DESCRIPTION
+.Nm
+controls an Anker Solix 3 solar battery system via the Anker cloud API.
+Credentials are read from environment variables or a
+.Pa .env
+file in the current directory.
+All read commands accept
+.Fl \-json
+to emit raw JSON instead of formatted output.
+.Sh COMMANDS
+.Bl -tag -width Ds
+.It Cm status
+Show live power flow: PV input, battery state of charge, output power,
+grid import, home load, and today's solar production in kWh.
+.It Cm devices
+List all registered devices with type, online status, battery SOC,
+PV input, and output power.
+.It Cm energy Op Fl \-days Ar n
+Show daily energy totals for the past
+.Ar n
+days (default: 7).
+Columns: solar production, battery charge, battery discharge,
+grid-to-home, and home usage, all in kWh.
+.It Cm config
+Show current device configuration: operating mode, AI EMS state,
+home load setting, backup reserve, and SOC cutoff thresholds.
+.It Cm set-output Ar watts
+Set the home load output power in watts.
+.It Cm set-soc Op Fl \-min Ar pct Op Fl \-max Ar pct
+Set battery SOC limits.
+.Fl \-min
+sets the discharge cutoff percentage;
+.Fl \-max
+sets the charge cutoff percentage.
+At least one option is required.
+.It Cm set-export Op Fl \-on | Fl \-off Op Fl \-limit Ar watts
+Enable or disable grid export and optionally set a watt cap.
+At least one option is required.
+Note: may not be supported on all Solarbank 3 configurations.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It Ev SOLIX_EMAIL
+Anker account email address.
+Also accepts
+.Ev ANKERUSER
+for compatibility with thomluther/anker-solix-api.
+.It Ev SOLIX_PASSWORD
+Anker account password.
+Also accepts
+.Ev ANKERPASSWORD .
+.It Ev SOLIX_COUNTRY
+Two-letter country code (default:
+.Dq DE ) .
+Also accepts
+.Ev ANKERCOUNTRY .
+.El
+.Sh FILES
+.Bl -tag -width Ds
+.It Pa .env
+Optional dotenv file loaded from the current directory.
+Supports the same variable names as the environment.
+See
+.Pa .env.example
+in the source tree.
+.El
+.Sh SEE ALSO
+.Lk https://github.com/thomluther/anker-solix-api
+.Sh CAVEATS
+This tool uses an unofficial, reverse-engineered API.
+Anker may change or revoke API access at any time without notice.
