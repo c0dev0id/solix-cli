@@ -22,6 +22,7 @@ venv: $(VENV)/bin/python3
 install:
 	python3 -m venv $(INSTALL_VENV)
 	$(INSTALL_VENV)/bin/pip install --upgrade pip
+	$(INSTALL_VENV)/bin/pip install -r requirements.txt
 	$(INSTALL_VENV)/bin/pip install vendor/anker-solix-api .
 	mkdir -p $(HOME)/bin
 	ln -sf $(INSTALL_VENV)/bin/solix-cli $(BIN_LINK)
