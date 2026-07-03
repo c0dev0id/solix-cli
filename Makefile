@@ -9,8 +9,9 @@ all: venv
 $(VENV)/bin/python3:
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install aiohttp aiofiles cryptography "paho-mqtt>=2.1.0" python-dotenv
+	$(PIP) install aiohttp aiofiles cryptography "paho-mqtt>=2.1.0" python-dotenv click
 	$(PIP) install -e vendor/anker-solix-api
+	$(PIP) install -e .
 
 venv: $(VENV)/bin/python3
 
