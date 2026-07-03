@@ -2,7 +2,7 @@ VENV    := .venv
 PYTHON  := $(VENV)/bin/python3
 PIP     := $(VENV)/bin/pip
 
-INSTALL_DIR := $(HOME)/python
+INSTALL_DIR := $(HOME)/python/solix-cli
 MAN_DIR     := $(INSTALL_DIR)/share/man/man1
 
 .PHONY: all venv install update clean
