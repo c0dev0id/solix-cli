@@ -1,2 +1,0 @@
-[console_scripts]
-solix-cli = solix_cli.__main__:main
