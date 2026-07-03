@@ -30,7 +30,7 @@ Then install the binary and man page:
 make install
 ```
 
-This puts `solix-cli` in `$HOME/python/solix-cli/bin/` and the man page in `$HOME/python/solix-cli/share/man/man1/`. Add both to your `PATH` and `MANPATH` respectively.
+This creates an isolated venv at `$HOME/.local/lib/solix-cli/`, links the binary to `$HOME/bin/solix-cli`, and installs the man page to `$HOME/.local/share/man/man1/`. Make sure `$HOME/bin` is in your `PATH` and `$HOME/.local/share/man` is in your `MANPATH`.
 
 ## Usage
 
@@ -64,6 +64,6 @@ solix-cli set-export --on --limit 500 # enable with 500W cap
 | Target | Description |
 |---|---|
 | `make venv` | Create `.venv` and install all dependencies |
-| `make install` | Install `solix-cli` binary and man page to `$HOME/python/solix-cli/` |
+| `make install` | Create isolated venv in `$HOME/.local/lib/solix-cli/`, link binary to `$HOME/bin/`, install man page |
 | `make update` | Pull latest upstream library changes |
 | `make clean` | Remove `.venv`, `build/`, and egg-info directories |

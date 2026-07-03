@@ -2,8 +2,9 @@ VENV    := .venv
 PYTHON  := $(VENV)/bin/python3
 PIP     := $(VENV)/bin/pip
 
-INSTALL_DIR := $(HOME)/python/solix-cli
-MAN_DIR     := $(INSTALL_DIR)/share/man/man1
+INSTALL_VENV := $(HOME)/.local/lib/solix-cli
+BIN_LINK     := $(HOME)/bin/solix-cli
+MAN_DIR      := $(HOME)/.local/share/man/man1
 
 .PHONY: all venv install update clean
 
@@ -18,8 +19,12 @@ $(VENV)/bin/python3:
 
 venv: $(VENV)/bin/python3
 
-install: $(VENV)/bin/python3
-	python3 -m pip install --prefix=$(INSTALL_DIR) vendor/anker-solix-api .
+install:
+	python3 -m venv $(INSTALL_VENV)
+	$(INSTALL_VENV)/bin/pip install --upgrade pip
+	$(INSTALL_VENV)/bin/pip install vendor/anker-solix-api .
+	mkdir -p $(HOME)/bin
+	ln -sf $(INSTALL_VENV)/bin/solix-cli $(BIN_LINK)
 	mkdir -p $(MAN_DIR)
 	install -m 644 solix-cli.1 $(MAN_DIR)/solix-cli.1
 
