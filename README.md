@@ -51,7 +51,7 @@ Add `--json` to any read command for raw JSON output.
 ### Write
 
 ```sh
-solix-cli set-output 300               # set home load output to 300W
+solix-cli set-output 300              # set home load output to 300W
 solix-cli set-soc --min 10 --max 90   # discharge cutoff 10%, charge cutoff 90%
 solix-cli set-soc --min 15            # change only discharge cutoff
 solix-cli set-export --on             # enable grid export
